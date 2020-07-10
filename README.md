@@ -3,18 +3,19 @@
 <p align="center"><img src="https://github.com/azhon/AppUpdate/blob/master/img/logo.png"></p>
 <p align="center">
   <img src="https://img.shields.io/badge/miniSdk-15%2B-blue.svg">
-  <img src="https://img.shields.io/badge/jcenter%20version-2.6.0-brightgreen.svg">
+  <img src="https://img.shields.io/badge/jcenter%20version-3.0.0-brightgreen.svg">
   <img src="https://img.shields.io/badge/author-azhon-%23E066FF.svg">
   <img src="https://img.shields.io/badge/license-Apache2.0-orange.svg">
 </p>
 
-### [AppUpdate正在征集框架使用者信息，希望得到大家的支持](https://github.com/azhon/AppUpdate/issues/58)
+### 自3.0.0版本开始可以使用[AppUpdate日志查询](http://azhong.tk:8088/app/)可以查看下载的异常信息，也可以查看哪些App正在使用，还可以一起来讨论问题哦！
 ### [由于Android Q版本限制后台应用启动Activity，所以下载完成会发送一个通知至通知栏（忽略showNotification的值，需要允许发送通知）](https://developer.android.google.cn/guide/components/activities/background-starts)
-### [由于Android Q版本限制应用访问外部存储目录（访问需要同时满足两个条件详情见文档）所以Q版本以上不要调用setDownloadPath()）](https://developer.android.google.cn/training/data-storage/files/external-scoped)
+### [由于Android Q版本限制应用访问外部存储目录，所以移除了setDownloadPath()功能](https://developer.android.google.cn/training/data-storage/files/external-scoped)
 
-## 扫码加入QQ群
+## 扫码加入QQ群(群号：828385813)
 
-<img src="https://github.com/azhon/AppUpdate/blob/master/img/qq_group.png">
+<img
+src="https://github.com/azhon/AppUpdate/blob/master/img/qq_group.png">
 
 ## 目录
 
@@ -23,10 +24,10 @@
 * [Demo下载体验](#demo下载体验)
 * [DownloadManager](#downloadmanager配置文档)
 * [UpdateConfiguration](#updateconfiguration配置文档)
+* [使用提醒](#使用提醒)
 * [使用步骤](#使用步骤)
 * [使用技巧](#使用技巧)
 * [版本更新记录](#版本更新记录)
-* [哪些App正在使用](#哪些App正在使用)
 
 ### 效果图
 
@@ -54,59 +55,68 @@
 
 ### Demo下载体验
 
- [点击下载Demo进行体验](https://github.com/azhon/AppUpdate/tree/master/apk/appupdate.apk)
+ [点击下载Demo进行体验](https://github.com/azhon/AppUpdate/releases/download/2.8.0/appupdate.apk)
 
 ### DownloadManager：配置文档
 
 > 初始化使用`DownloadManager.getInstance(this)`
 
-| 属性             | 描述                                                        | 默认值                   | 是否必须设置 |
-|:-------------- |:--------------------------------------------------------- |:--------------------- |:------ |
-| context        | 上下文                                                       | null                  | true   |
-| apkUrl         | apk的下载地址                                                  | null                  | true   |
-| apkName        | apk下载好的名字                                                 | null                  | true   |
-| downloadPath   | apk下载的位置                                                  | getExternalCacheDir() | false  |
-| showNewerToast | 是否提示用户 "当前已是最新版本"                                         | false                 | false  |
-| smallIcon      | 通知栏的图标(资源id)                                              | -1                    | true   |
-| configuration  | 这个库的额外配置                                                  | null                  | false  |
-| apkVersionCode | 更新apk的versionCode <br>(如果设置了那么库中将会进行版本判断<br>下面的属性也就需要设置了) | 1                     | false  |
-| apkVersionName | 更新apk的versionName                                         | null                  | false  |
-| apkDescription | 更新描述                                                      | null                  | false  |
-| apkSize        | 新版本的安装包大小（单位M）                                            | null                  | false  |
-| authorities    | 兼容Android N uri授权                                         | 应用包名                  | false  |
-| apkMD5         | 新安装包的md5（32位)                                             | null                  | false  |
+| 属性             | 描述                                                                                    | 默认值                | 是否必须设置 |
+|:-------------- |:----------------------------------------------------------------------------------------- |:--------------------- |:------------ |
+| context        | 上下文                                                                                    | null                  | true         |
+| apkUrl         | apk的下载地址                                                                             | null                  | true         |
+| apkName        | apk下载好的名字                                                                           | null                  | true         |
+| downloadPath   | apk下载的位置 (2.7.0以上版本已过时)                                                       | getExternalCacheDir() | false        |
+| showNewerToast | 是否提示用户 "当前已是最新版本"                                                           | false                 | false        |
+| smallIcon      | 通知栏的图标(资源id)                                                                      | -1                    | true         |
+| configuration  | 这个库的额外配置                                                                          | null                  | false        |
+| apkVersionCode | 更新apk的versionCode <br>(如果设置了那么库中将会进行版本判断<br>下面的属性也就需要设置了)           | Integer.MIN_VALUE     | false        |
+| apkVersionName | 更新apk的versionName                                                                      | null                  | false        |
+| apkDescription | 更新描述                                                                                  | null                  | false        |
+| apkSize        | 新版本的安装包大小（单位M）                                                               | null                  | false        |
+| apkMD5         | 新安装包的md5（32位)                                                                      | null                  | false        |
 
 ### UpdateConfiguration：配置文档
 
-| 属性                    | 描述                    | 默认值    |
-|:--------------------- |:--------------------- |:------ |
-| notifyId              | 通知栏消息id               | 1011   |
-| notificationChannel   | 适配Android O的渠道通知      | 详情查阅源码 |
-| httpManager           | 设置自己的下载过程             | null   |
-| enableLog             | 是否需要日志输出              | true   |
-| onDownloadListener    | 下载过程的回调               | null   |
-| jumpInstallPage       | 下载完成是否自动弹出安装页面        | true   |
-| showNotification      | 是否显示通知栏进度（后台下载提示）     | true   |
-| forcedUpgrade         | 是否强制升级                | false  |
-| showBgdToast          | 是否提示 "正在后台下载新版本…"     | true   |
-| onButtonClickListener | 按钮点击事件回调              | null   |
-| dialogImage           | 对话框背景图片资源(图片规范参考demo) | -1     |
-| dialogButtonColor     | 对话框按钮的颜色              | -1     |
-| dialogButtonTextColor | 对话框按钮的文字颜色            | -1     |
-| dialogProgressBarColor | 对话框进度条和文字颜色          | -1     |
+| 属性                  | 描述                                   | 默认值       |
+|:--------------------- |:-------------------------------------- |:------       |
+| notifyId              | 通知栏消息id                           | 1011         |
+| notificationChannel   | 适配Android O的渠道通知                | 详情查阅源码 |
+| httpManager           | 设置自己的下载过程                     | null         |
+| enableLog             | 是否需要日志输出                       | true         |
+| onDownloadListener    | 下载过程的回调                         | null         |
+| jumpInstallPage       | 下载完成是否自动弹出安装页面           | true         |
+| showNotification      | 是否显示通知栏进度（后台下载提示）     | true         |
+| forcedUpgrade         | 是否强制升级                           | false        |
+| showBgdToast          | 是否提示 "正在后台下载新版本…"        | true         |
+| onButtonClickListener | 按钮点击事件回调                       | null         |
+| dialogImage           | 对话框背景图片资源(图片规范参考demo)   | -1           |
+| dialogButtonColor     | 对话框按钮的颜色                       | -1           |
+| dialogButtonTextColor | 对话框按钮的文字颜色                   | -1           |
+| dialogProgressBarColor| 对话框进度条和文字颜色                 | -1           |
+
+### 使用提醒
+
+因为目前会配合[AppUpdate日志查询](http://azhong.tk:8088/app/)平台会产生一些网络数据，这些信息收集绝不用于任何恶意用途。
+如果你不想使用，可以下载源代码进行集成并将HttpUtil代码移除即可。
+
+* 统计有多少App集成了AppUpdate</br>
+HttpUtil#postUsage
+* 上报下载的错误信息</br>
+HttpUtil#postException
 
 ### 使用步骤
 
 #### 第一步： `app/build.gradle`进行依赖
 
 ```groovy
-implementation 'com.azhon:appupdate:2.6.0'
+implementation 'com.azhon:appupdate:3.0.0'
 ```
 
 - 如果你使用的是`AndroidX`，请依赖`appupdateX`
 
 ```groovy
-implementation 'com.azhon:appupdateX:2.6.0'
+implementation 'com.azhon:appupdateX:3.0.0'
 ```
 
 #### 第二步：创建`DownloadManager`，更多用法请查看[这里示例代码](https://github.com/azhon/AppUpdate/blob/master/app/src/main/java/com/azhon/app/MainActivity.java)
@@ -116,58 +126,11 @@ DownloadManager manager = DownloadManager.getInstance(this);
 manager.setApkName("appupdate.apk")
         .setApkUrl("https://raw.githubusercontent.com/azhon/AppUpdate/master/apk/appupdate.apk")
         .setSmallIcon(R.mipmap.ic_launcher)
-        //可设置，可不设置
-        .setConfiguration(configuration)
         .download();
 ```
+如果需要显示内置的对话框那么你需要调用`manager.setApkVersionCode()`将新版本的versionCode填进去
 
-#### 第三步：兼容Android N 及以上版本，在你应用的`Manifest.xml`添加如下代码
-
-> provider中设置的authorities值必须与DownloadManager中设置的authorities一致（不设置则为应用包名）
-> 
-> android:authorities="${applicationId}"
-
-```xml
-<provider
-    android:name="android.support.v4.content.FileProvider"
-    android:authorities="${applicationId}"
-    android:exported="false"
-    android:grantUriPermissions="true">
-    <meta-data
-        android:name="android.support.FILE_PROVIDER_PATHS"
-        android:resource="@xml/file_paths_public" />
-</provider>
-```
-
-- 如果你引入的是`appupdateX`版本
-
-  ```xml
-  <provider
-      android:name="androidx.core.content.FileProvider"
-      android:authorities="${applicationId}"
-      android:exported="false"
-      android:grantUriPermissions="true">
-      <meta-data
-          android:name="android.support.FILE_PROVIDER_PATHS"
-          android:resource="@xml/file_paths_public" />
-  </provider>
-  ```
-
-#### 第四步：资源文件`res/xml/file_paths_public.xml`内容
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <external-path
-        name="app_update_external"
-        path="/" />
-    <external-cache-path
-        name="app_update_cache"
-        path="/" />
-</paths>
-```
-
-#### 第五步：混淆打包，只需保持`Activity`、`Service`不混淆
+#### 第三步：混淆打包，只需保持`Activity`、`Service`不混淆
 
 ```groovy
 -keep public class * extends android.app.Activity
@@ -178,7 +141,6 @@ manager.setApkName("appupdate.apk")
 
 * 框架内部支持中/英文 国际化（其他语言只需要在对应的`string.xml`中取相同的名字即可）
 * 查看版本库中的Log只需要过滤`AppUpdate`开头的Tag
-* 如果没有设置`downloadPath`则默认为`getExternalCacheDir()`目录同时不会申请[存储]权限！
 * 支持校验安装包的MD5避免重复下载，只需要`DownloadManager`设置安装包的MD5即可
 * 下载完成 打开新版本后删除旧安装包文件，[实现思路请移步此处](https://github.com/azhon/AppUpdate/wiki/常见问题)
 
@@ -196,11 +158,10 @@ public class MyDownload extends BaseHttpDownloadManager {}
 
 ### 版本更新记录
 
-* v2.6.0
+* v3.0.0（2020/06/05）
 
-  * 新增强制更新时内置对话框显示下载进度
-  * 优化Android Q下载完成无法弹出安装界面，显示一个完成通知
-  * 优化下载失败日志打印
+  * [修复] 解决高版本不能使用http明文网络请求问题
+  * [新增] 上报错误信息至服务器
 
 * [更多更新记录点此查看](https://github.com/azhon/AppUpdate/wiki/更新日志)
 
@@ -209,18 +170,3 @@ public class MyDownload extends BaseHttpDownloadManager {}
 
 
 <img src="https://github.com/azhon/AppUpdate/blob/master/img/money.jpg" width="600"/>
-
-### 哪些App正在使用
-
-<table cellspacing="8" >
-  <tr>
-    <td></td>
-    <td><a href="http://app.mi.com/details?id=com.vice.bloodpressure"><img src="http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/00d2e4e2668ac84d7fb7d0ef130f15aec9d4202bc" width="100"></a></td>
-    <td><a href="http://app.mi.com/details?id=com.xy.xydoctor"><img src="http://file.market.xiaomi.com/thumbnail/PNG/l114/AppStore/019b1555a24c734ce9c12843ef137edc01f43ec8e" width="100"></a></td>
-  </tr>
-    <tr>
-    <th>易果无忧</th>
-    <th>慧健康</th>
-    <th>慧健康医生版</th>
-  </tr>
-</table>

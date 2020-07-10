@@ -6,15 +6,14 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.azhon.appupdate.R;
-import com.azhon.appupdate.activity.PermissionActivity;
 import com.azhon.appupdate.base.BaseHttpDownloadManager;
 import com.azhon.appupdate.config.UpdateConfiguration;
 import com.azhon.appupdate.dialog.UpdateDialog;
 import com.azhon.appupdate.service.DownloadService;
 import com.azhon.appupdate.utils.ApkUtil;
 import com.azhon.appupdate.utils.Constant;
+import com.azhon.appupdate.utils.HttpUtil;
 import com.azhon.appupdate.utils.LogUtil;
-import com.azhon.appupdate.utils.PermissionUtil;
 
 /**
  * 项目名:    AppUpdate
@@ -64,7 +63,7 @@ public class DownloadManager {
     /**
      * 要更新apk的versionCode
      */
-    private int apkVersionCode = 1;
+    private int apkVersionCode = Integer.MIN_VALUE;
     /**
      * 显示给用户的版本号
      */
@@ -77,10 +76,6 @@ public class DownloadManager {
      * 安装包大小 单位 M
      */
     private String apkSize = "";
-    /**
-     * 兼容Android N 添加uri权限 authorities
-     */
-    private String authorities = "";
     /**
      * 新安装包md5文件校验（32位)，校验重复下载
      */
@@ -179,9 +174,11 @@ public class DownloadManager {
 
     /**
      * 设置apk的保存路径
+     * 由于Android Q版本限制应用访问外部存储目录，所以不再支持设置存储目录
+     * 使用的路径为:/storage/emulated/0/Android/data/ your packageName /cache
      */
+    @Deprecated
     public DownloadManager setDownloadPath(String downloadPath) {
-        this.downloadPath = downloadPath;
         return this;
     }
 
@@ -279,20 +276,6 @@ public class DownloadManager {
         return this;
     }
 
-    /**
-     * 设置Android N Uri授权authorities
-     */
-    public String getAuthorities() {
-        return authorities;
-    }
-
-    /**
-     * 获取Android N Uri授权authorities
-     */
-    public DownloadManager setAuthorities(String authorities) {
-        this.authorities = authorities;
-        return this;
-    }
 
     /**
      * 新安装包md5文件校验
@@ -336,19 +319,12 @@ public class DownloadManager {
      * 开始下载
      */
     public void download() {
+        HttpUtil.postUsage(context);
         if (!checkParams()) {
             //参数设置出错....
             return;
         }
         if (checkVersionCode()) {
-            //使用缓存目录不申请权限
-            if (!downloadPath.equals(context.getExternalCacheDir().getPath())) {
-                //检查权限
-                if (!PermissionUtil.checkStoragePermission(context)) {
-                    context.startActivity(new Intent(context, PermissionActivity.class));
-                    return;
-                }
-            }
             context.startService(new Intent(context, DownloadService.class));
         } else {
             //对版本进行判断，是否显示升级对话框
@@ -397,18 +373,13 @@ public class DownloadManager {
             LogUtil.e(TAG, "apkName must endsWith .apk!");
             return false;
         }
-        /*
-            这里需要注意，如果用户没有设置保存目录则使用缓存目录
-            路径为:/storage/emulated/0/Android/data/ your packageName /cache
-            如果使用的是缓存路径，则不申请内存权限
-         */
-        if (TextUtils.isEmpty(downloadPath)) {
-            downloadPath = context.getExternalCacheDir().getPath();
-        }
+        downloadPath = context.getExternalCacheDir().getPath();
         if (smallIcon == -1) {
             LogUtil.e(TAG, "smallIcon can not be empty!");
             return false;
         }
+        //加载用户设置的authorities
+        Constant.AUTHORITIES = context.getPackageName() + ".fileProvider";
         //如果用户没有进行配置，则使用默认的配置
         if (configuration == null) {
             configuration = new UpdateConfiguration();
@@ -417,25 +388,18 @@ public class DownloadManager {
     }
 
     /**
-     * 检查设置的apkVersionCode 如果是大于1则使用内置的对话框
-     * 如果小于等于1则直接启动服务下载
+     * 检查设置的{@link this#apkVersionCode} 如果不是默认值则使用内置的对话框
+     * 如果是默认值{@link Integer#MIN_VALUE}直接启动服务下载
      */
     private boolean checkVersionCode() {
-        //如果设置了小于的versionCode 你不是在写bug就是脑子瓦塌拉
-        if (apkVersionCode < 1) {
-            apkVersionCode = 1;
-            LogUtil.e(TAG, "apkVersionCode can not be < 1 !");
+        if (apkVersionCode == Integer.MIN_VALUE) {
             return true;
         }
-        if (apkVersionCode > 1) {
-            //设置了 VersionCode 则库中进行对话框逻辑处理
-            if (TextUtils.isEmpty(apkDescription)) {
-                LogUtil.e(TAG, "apkDescription can not be empty!");
-            }
-            return false;
+        //设置了 VersionCode 则库中进行对话框逻辑处理
+        if (TextUtils.isEmpty(apkDescription)) {
+            LogUtil.e(TAG, "apkDescription can not be empty!");
         }
-        //等于1的情况
-        return true;
+        return false;
     }
 
     /**

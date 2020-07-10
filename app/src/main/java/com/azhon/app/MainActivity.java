@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements OnDownloadListene
 
     private NumberProgressBar progressBar;
     private DownloadManager manager;
-    private String url = "https://f29addac654be01c67d351d1b4282d53.dd.cdntips.com/imtt.dd.qq.com/16891/DC501F04BBAA458C9DC33008EFED5E7F.apk?mkey=5d6d132d73c4febb&f=0c2f&fsname=com.estrongs.android.pop_4.2.0.2.1_10027.apk&csr=1bbd&cip=115.196.216.78&proto=https";
+    private String url = "https://89e03ca66219bbe3cf0d65cd0d800c50.dd.cdntips.com/imtt.dd.qq.com/16891/apk/86E914A33DAF7E2B88725E486E907288.apk?mkey=5e8b026fb79c5ff3&f=1026&fsname=com.estrongs.android.pop_4.2.2.3_10063.apk&csr=1bbd&cip=183.156.121.6&proto=https";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity implements OnDownloadListene
         findViewById(R.id.btn_2).setOnClickListener(this);
         findViewById(R.id.btn_3).setOnClickListener(this);
         findViewById(R.id.btn_4).setOnClickListener(this);
-        //delete old apk file...
-//        boolean b = ApkUtil.deleteOldApk(this, getExternalCacheDir().getPath() + "/appupdate.apk");
+        //删除旧安装包
+//        boolean b = ApkUtil.deleteOldApk(this, getExternalCacheDir().getPath() + "/ESFileExplorer.apk");
     }
 
     @Override
@@ -144,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements OnDownloadListene
                 .setApkVersionCode(2)
                 .setApkVersionName("2.1.8")
                 .setApkSize("20.4")
-                .setAuthorities(getPackageName())
                 .setApkDescription(getString(R.string.dialog_msg))
 //                .setApkMD5("DC501F04BBAA458C9DC33008EFED5E7F")
                 .download();

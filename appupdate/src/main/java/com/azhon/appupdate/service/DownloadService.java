@@ -8,7 +8,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.azhon.appupdate.R;
@@ -20,6 +20,7 @@ import com.azhon.appupdate.manager.HttpDownloadManager;
 import com.azhon.appupdate.utils.ApkUtil;
 import com.azhon.appupdate.utils.Constant;
 import com.azhon.appupdate.utils.FileUtil;
+import com.azhon.appupdate.utils.HttpUtil;
 import com.azhon.appupdate.utils.LogUtil;
 import com.azhon.appupdate.utils.NotificationUtil;
 
@@ -44,7 +45,6 @@ public final class DownloadService extends Service implements OnDownloadListener
     private String apkUrl;
     private String apkName;
     private String downloadPath;
-    private String authorities;
     private List<OnDownloadListener> listeners;
     private boolean showNotification;
     private boolean showBgdToast;
@@ -72,11 +72,6 @@ public final class DownloadService extends Service implements OnDownloadListener
         apkName = downloadManager.getApkName();
         downloadPath = downloadManager.getDownloadPath();
         smallIcon = downloadManager.getSmallIcon();
-        authorities = downloadManager.getAuthorities();
-        //如果没有设置则为包名
-        if (TextUtils.isEmpty(authorities)) {
-            authorities = getPackageName();
-        }
         //创建apk文件存储文件夹
         FileUtil.createDirDirectory(downloadPath);
         UpdateConfiguration configuration = downloadManager.getConfiguration();
@@ -152,8 +147,9 @@ public final class DownloadService extends Service implements OnDownloadListener
             if (curr != lastProgress) {
                 lastProgress = curr;
                 String downloading = getResources().getString(R.string.start_downloading);
+                String content = curr < 0 ? "" : curr + "%";
                 NotificationUtil.showProgressNotification(this, smallIcon, downloading,
-                        curr + "%", max == -1 ? -1 : 100, curr);
+                        content, max == -1 ? -1 : 100, curr);
             }
         }
         handler.obtainMessage(2, max, progress).sendToTarget();
@@ -167,10 +163,11 @@ public final class DownloadService extends Service implements OnDownloadListener
         if (showNotification || Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             String downloadCompleted = getResources().getString(R.string.download_completed);
             String clickHint = getResources().getString(R.string.click_hint);
-            NotificationUtil.showDoneNotification(this, smallIcon, downloadCompleted, clickHint, authorities, apk);
+            NotificationUtil.showDoneNotification(this, smallIcon, downloadCompleted,
+                    clickHint, Constant.AUTHORITIES, apk);
         }
         if (jumpInstallPage) {
-            ApkUtil.installApk(this, authorities, apk);
+            ApkUtil.installApk(this, Constant.AUTHORITIES, apk);
         }
         //如果用户设置了回调 则先处理用户的事件 在执行自己的
         handler.obtainMessage(3, apk).sendToTarget();
@@ -188,16 +185,11 @@ public final class DownloadService extends Service implements OnDownloadListener
     @Override
     public void error(Exception e) {
         LogUtil.e(TAG, "error: " + e);
+        HttpUtil.postException(this, apkUrl, e.toString(), Log.getStackTraceString(e));
         downloadManager.setState(false);
         if (showNotification) {
-            String msg = e.getMessage();
             String downloadError = getResources().getString(R.string.download_error);
             String conDownloading = getResources().getString(R.string.continue_downloading);
-            if (!TextUtils.isEmpty(msg) &&
-                    msg.contains("android.content.res.XmlResourceParser")) {
-                downloadError = getResources().getString(R.string.error_config);
-                conDownloading = getResources().getString(R.string.read_readme);
-            }
             NotificationUtil.showErrorNotification(this, smallIcon, downloadError, conDownloading);
         }
         handler.obtainMessage(5, e).sendToTarget();

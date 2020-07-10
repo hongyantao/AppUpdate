@@ -20,15 +20,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.azhon.appupdate.R;
-import com.azhon.appupdate.activity.PermissionActivity;
 import com.azhon.appupdate.config.UpdateConfiguration;
 import com.azhon.appupdate.listener.OnButtonClickListener;
 import com.azhon.appupdate.listener.OnDownloadListener;
 import com.azhon.appupdate.manager.DownloadManager;
 import com.azhon.appupdate.service.DownloadService;
 import com.azhon.appupdate.utils.ApkUtil;
+import com.azhon.appupdate.utils.Constant;
 import com.azhon.appupdate.utils.DensityUtil;
-import com.azhon.appupdate.utils.PermissionUtil;
 import com.azhon.appupdate.utils.ScreenUtil;
 
 import java.io.File;
@@ -51,7 +50,6 @@ public class UpdateDialog extends Dialog implements View.OnClickListener, OnDown
     private boolean forcedUpgrade;
     private Button update;
     private NumberProgressBar progressBar;
-    private String downloadPath;
     private OnButtonClickListener buttonClickListener;
     private int dialogImage, dialogButtonTextColor, dialogButtonColor, dialogProgressBarColor;
     private File apk;
@@ -70,7 +68,6 @@ public class UpdateDialog extends Dialog implements View.OnClickListener, OnDown
         manager = DownloadManager.getInstance();
         UpdateConfiguration configuration = manager.getConfiguration();
         configuration.setOnDownloadListener(this);
-        downloadPath = manager.getDownloadPath();
         forcedUpgrade = configuration.isForcedUpgrade();
         buttonClickListener = configuration.getOnButtonClickListener();
         dialogImage = configuration.getDialogImage();
@@ -176,14 +173,6 @@ public class UpdateDialog extends Dialog implements View.OnClickListener, OnDown
             if (buttonClickListener != null) {
                 buttonClickListener.onButtonClick(OnButtonClickListener.UPDATE);
             }
-            //使用缓存目录不申请权限
-            if (!downloadPath.equals(context.getExternalCacheDir().getPath())) {
-                if (!PermissionUtil.checkStoragePermission(context)) {
-                    //没有权限,去申请权限
-                    context.startActivity(new Intent(context, PermissionActivity.class));
-                    return;
-                }
-            }
             context.startService(new Intent(context, DownloadService.class));
         }
     }
@@ -192,12 +181,7 @@ public class UpdateDialog extends Dialog implements View.OnClickListener, OnDown
      * 强制更新，点击进行安装
      */
     private void installApk() {
-        String authorities = manager.getAuthorities();
-        //如果没有设置则为包名
-        if (TextUtils.isEmpty(authorities)) {
-            authorities = context.getPackageName();
-        }
-        ApkUtil.installApk(context, authorities, apk);
+        ApkUtil.installApk(context, Constant.AUTHORITIES, apk);
     }
 
     @Override
@@ -210,6 +194,8 @@ public class UpdateDialog extends Dialog implements View.OnClickListener, OnDown
         if (max != -1 && progressBar.getVisibility() == View.VISIBLE) {
             int curr = (int) (progress / (double) max * 100.0);
             progressBar.setProgress(curr);
+        } else {
+            progressBar.setVisibility(View.GONE);
         }
     }
 

@@ -3,14 +3,14 @@
 <p align="center"><img src="https://github.com/azhon/AppUpdate/blob/master/img/logo.png"></p>
 <p align="center">
   <img src="https://img.shields.io/badge/miniSdk-15%2B-blue.svg">
-  <img src="https://img.shields.io/badge/jcenter%20version-2.6.0-brightgreen.svg">
+  <img src="https://img.shields.io/badge/jcenter%20version-3.0.0-brightgreen.svg">
   <img src="https://img.shields.io/badge/author-azhon-%23E066FF.svg">
   <img src="https://img.shields.io/badge/license-Apache2.0-orange.svg">
 </p>
 
-### [AppUpdate is collecting frame user information and hopes to get everyone's support](https://github.com/azhon/AppUpdate/issues/58)
+### Since version 3.0.0, you can use [AppUpdate log query](http://azhong.tk:8088/app/) to see which apps are in use, and you can also discuss issues together!
 ### [Since Android Q version restricts background apps from launching Activity, a notification will be sent to the notification bar when the download is complete (ignoring the showNotification value, you need to allow notifications to be sent)](https://developer.android.google.cn/guide/components/activities/background-starts)
-### [Since Android Q version restricts access to external storage (access needs to meet two conditions at the same time, see the documentation for details), so don't setDownloadPath() above Q version](https://developer.android.google.cn/training/data-storage/files/external-scoped)
+### [Since Android Q version restricts access to external storage，so removed setDownloadPath()](https://developer.android.google.cn/training/data-storage/files/external-scoped)
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@
 * Demo download experience
 * DownloadManager
 * UpdateConfiguration
+* Use reminder
 * Steps for usage
 * Skills
 * Version update record
@@ -46,7 +47,7 @@
 * [x] Support download completion Delete old APK file after opening new version
 * [x] Download using HttpURLConnection, no other third-party framework is integrated
 
-### [Demo download experience](https://github.com/azhon/AppUpdate/tree/master/apk/appupdate.apk)
+### [Demo download experience](https://github.com/azhon/AppUpdate/releases/download/2.8.0/appupdate.apk)
 
 ### DownloadManager：Configuration Doc
 
@@ -57,15 +58,14 @@
 | context        | Context                                                                                                                      | null                  | true        |
 | apkUrl         | Apk download Url                                                                                                             | null                  | true        |
 | apkName        | Apk download  name                                                                                                           | null                  | true        |
-| downloadPath   | apk download path                                                                                                            | getExternalCacheDir() | false       |
+| downloadPath   | apk download path(2.7.0 or higher is deprecated)                                                                             | getExternalCacheDir() | false       |
 | showNewerToast | Whether to prompt the user<br> "currently the latest version" toast                                                          | false                 | false       |
 | smallIcon      | Notification icon (resource id)                                                                                              | -1                    | true        |
 | configuration  | Additional configuration of this library                                                                                     | null                  | false       |
-| apkVersionCode | new apk versionCode <br>(If set, the version will be judged in the library,<br>The following properties also need to be set) | 1                     | false       |
+| apkVersionCode | new apk versionCode <br>(If set, the version will be judged in the library,<br>The following properties also need to be set) | Integer.MIN_VALUE     | false       |
 | apkVersionName | new apk versionName                                                                                                          | null                  | false       |
 | apkDescription | Update description                                                                                                           | null                  | false       |
 | apkSize        | New version of the apk size (unit M)                                                                                         | null                  | false       |
-| authorities    | Support Android N uri license                                                                                                | package Name          | false       |
 | apkMD5         | Md5 (32 bit) of the new apk                                                                                                  | null                  | false       |
 
 ### UpdateConfiguration：Configuration Doc
@@ -87,18 +87,27 @@
 | dialogButtonTextColor | The text color of the dialog button                                                     | -1                         |
 | dialogProgressBarColor | Dialog progress bar and text color                                                     | -1                         |
 
+### Usage reminder
+
+Because it will cooperate with the [AppUpdate log query](http://azhong.tk:8088/app/) platform to generate some network data, this information collection will never be used for any malicious purposes.
+
+* Count how many Apps used AppUpdate</br>
+HttpUtil#postUsage
+* Report the download error log</br>
+HttpUtil#postException
+
 ### Steps for usage
 
 #### Step1： `app/build.gradle` Dependent
 
 ```groovy
-implementation 'com.azhon:appupdate:2.6.0'
+implementation 'com.azhon:appupdate:3.0.0'
 ```
 
 - If you using `AndroidX`, please implementation `appupdateX`
 
 ```groovy
-implementation 'com.azhon:appupdateX:2.6.0'
+implementation 'com.azhon:appupdateX:3.0.0'
 ```
 
 #### Step2：Create `DownloadManager`，For more usage, please see [sample code here](https://github.com/azhon/AppUpdate/blob/master/app/src/main/java/com/azhon/app/MainActivity.java)
@@ -113,53 +122,7 @@ manager.setApkName("appupdate.apk")
         .download();
 ```
 
-#### Step3：Compatible with Android N and above，Add the following code to your app's `Manifest.xml`
-
-> The authorities value set in the provider must be the same as the authorities set in the DownloadManager (the application package name is not set)
-> 
-> android:authorities="${applicationId}"
-
-```xml
-<provider
-    android:name="android.support.v4.content.FileProvider"
-    android:authorities="${applicationId}"
-    android:exported="false"
-    android:grantUriPermissions="true">
-    <meta-data
-        android:name="android.support.FILE_PROVIDER_PATHS"
-        android:resource="@xml/file_paths_public" />
-</provider>
-```
-
-- If you implementation the `appupdateX` version
-
-  ```xml
-  <provider
-      android:name="androidx.core.content.FileProvider"
-      android:authorities="${applicationId}"
-      android:exported="false"
-      android:grantUriPermissions="true">
-      <meta-data
-          android:name="android.support.FILE_PROVIDER_PATHS"
-          android:resource="@xml/file_paths_public" />
-  </provider>
-  ```
-
-#### Step4：Resource file `res/xml/file_paths_public.xml` content
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <external-path
-        name="app_update_external"
-        path="/" />
-    <external-cache-path
-        name="app_update_cache"
-        path="/" />
-</paths>
-```
-
-#### Step5：ProGuard Rules
+#### Step3：ProGuard Rules
 
 ```groovy
 -keep public class * extends android.app.Activity
@@ -170,7 +133,6 @@ manager.setApkName("appupdate.apk")
 
 * Internal support Chinese / English (other languages only need to take the same name in the corresponding `string.xml`
 * To view the Log, you only need to filter the Tag at the beginning of `AppUpdate`
-* If `downloadPath` is not set, the default is the `getExternalCacheDir()` directory and will not apply for [storage] permissions.
 * Download completed Delete old APK file after opening new version
 
 ```java
@@ -187,10 +149,10 @@ public class MyDownload extends BaseHttpDownloadManager {}
 
 ### Version update record
 
-* v2.6.0
-  * Added dialog to show download progress during forced update
-  * Optimized the Android Q downloading completed can't jump to the installation page, display a completion notification
-  * Optimized download failure log printing
+* v3.0.0 (2020/06/05)
+
+   * [Fix] Solve the problem that the high version cannot use http clear text network request
+   * [New] Report error information to the server
 
 #### [More update records click here to view](https://github.com/azhon/AppUpdate/wiki/更新日志)
 
